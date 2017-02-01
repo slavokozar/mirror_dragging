@@ -15,3 +15,8 @@ body{
 #serialized{
     padding:20px
 }
+
+.element{
+    position:absolute;
+    border:1px solid black;
+}

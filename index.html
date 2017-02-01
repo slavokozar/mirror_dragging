@@ -95,26 +95,32 @@
 <script src="js/jquery.min.js"></script>
 <script src="js/jquery-ui.min.js"></script>
 <script src="js/jquery.json-viewer.js"></script>
+<script src="js/script.js"></script>
 
 <!-- Optional theme -->
 <script>
-    var elements = [
-        {
-            type: 1,
-            x: 10,
-            y: 10
-        },
-        {
-            type: 2,
-            x: 50,
-            y: 10
-        },
-        {
-            type: 3,
-            x: 50,
-            y: 50
-        }
-    ];
+    $(function() {
+
+        var elements = [
+            {
+                type: 1,
+                x: 10,
+                y: 10
+            },
+            {
+                type: 2,
+                x: 50,
+                y: 10
+            },
+            {
+                type: 3,
+                x: 50,
+                y: 50
+            }
+        ];
+
+        elementsStart(elements);
+    });
 </script>
 
 

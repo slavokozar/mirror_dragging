@@ -1,13 +1,5 @@
-$(function() {
-    var width = $('#grid').width();
-    var height = $('#grid').height();
-
-    $('#serialized').jsonViewer(elements);
-
-    for (var i = 0; i < elements.length; i++) {
-        createElement(elements[i].type, elements[i].x, elements[i].y);
-    }
-
+    var width = 0;
+    var height = 0;
 
     $(document).on('click', '.btn-delete', function (e) {
         $(e.target).closest('.element').remove();
@@ -21,6 +13,17 @@ $(function() {
         createElement(type, x, y);
         store();
     })
+
+    function elementsStart(elements){
+        width = $('#grid').width();
+        height = $('#grid').height();
+
+        $('#serialized').jsonViewer(elements);
+
+        for (var i = 0; i < elements.length; i++) {
+            createElement(elements[i].type, elements[i].x, elements[i].y);
+        }
+    }
 
     function createElement(type, x, y) {
         var $element = $(
@@ -77,5 +80,5 @@ $(function() {
 
         return elements;
     }
-});
+
 
