@@ -1,0 +1,227 @@
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Mirror config</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/jquery.json-viewer.css">
+
+  <style>
+
+      body{
+          padding:20px;
+      }
+
+      #grid{
+          position:relative;
+          height:calc(100vh - 40px);
+          border:2px solid black;
+      }
+
+      .element{
+          border:1px solid black;
+          position:absolute;
+
+      }
+      .element-1{
+          background: #337ab7;
+          width:20%;
+          height:30%;
+      }
+      .element-2{
+          background: #5bc0de;
+          width:10%;
+          height:40%;
+      }
+      .element-3{
+          background: #d9534f;
+          width:10%;
+          height:10%;
+      }
+      .element-4{
+          background: #5cb85c;
+          width:10%;
+          height:10%;
+      }
+      .element-5{
+          background: #f0ad4e;
+          width:10%;
+          height:10%;
+      }
+
+      .btn-delete{
+          color: #fff;
+      }
+
+      #serialized{
+          padding:20px
+      }
+
+
+  </style>
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="grid">
+
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="row">
+                    <div class="col-lg-12 text-center" id="toolbar">
+                        <h2>Add elements</h2>
+                        <button class="btn btn-primary" data-type="1">Add 1</button>
+                        <button class="btn btn-info" data-type="2">Add 2</button>
+                        <button class="btn btn-danger" data-type="3">Add 3</button>
+                        <button class="btn btn-success" data-type="4">Add 4</button>
+                        <button class="btn btn-warning" data-type="5">Add 5</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12 text-center">
+                        <h2>Serialized data</h2>
+                    </div>
+                    <div class="col-lg-12">
+                        <pre id="serialized">
+
+                        </pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div> <!-- /container -->
+
+    <div id="loader" class="hidden">
+      <div id="loader-inner" class="text-center">
+        <img src="img/zomato-developers-logo.png" alt="ZOMATO Developers logo"/>
+        <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
+        <p>loading restaurants...</p>
+      </div>  
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <script src="js/jquery.json-viewer.js"></script>
+
+    <!-- Optional theme -->
+    <script>
+        var elements = [
+            {
+                type: 1,
+                x:10,
+                y:10
+            },
+            {
+                type: 2,
+                x:50,
+                y:10
+            },
+            {
+                type: 3,
+                x:50,
+                y:50
+            }
+        ];
+
+        var width = $('#grid').width();
+        var height = $('#grid').height();
+
+        for(var i = 0; i < elements.length; i++){
+            createElement(elements[i].type, elements[i].x, elements[i].y);
+        }
+
+        $(document).on('click', '.btn-delete', function(e){
+            $(e.target).closest('.element').remove();
+            store();
+        });
+
+        $(document).on('click', '#toolbar .btn', function(e){
+            var type = $(e.target).closest('.btn').data('type');
+            var x = 0;
+            var y = 0;
+            createElement(type, x, y);
+        })
+
+        function createElement(type, x, y){
+            var $element = $(
+                '<div class="element element-'+type+'" data-type="'+type+'">' +
+                '<button class="btn btn-link btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></button>'+
+                '</div>'
+            );
+
+            $('#grid').append($element);
+
+            $element.css({
+                top: x+'%',
+                left: y+'%'
+            });
+
+            elementDraggable($element);
+        }
+
+        function elementDraggable($element){
+            $element.draggable({
+                drag: function( event, ui ) {
+                    var top = Math.min(Math.max(0, ui.position.top), (height - $(event.target).height()));
+                    var left = Math.min(Math.max(0, ui.position.left), (width - $(event.target).width()));
+
+
+                    ui.position.top = top;
+                    ui.position.left = left;
+                }
+            });
+        }
+
+        function store(){
+            var elements = serialize();
+
+
+            $('#serialized').jsonViewer(elements);
+
+
+        }
+
+        function serialize(){
+            var elements = [];
+            $('#grid .element').each(function(){
+                $(this);
+                elements.push({
+                    type: $(this).data('type'),
+                    x: ($(this).offset().left / width) * 100,
+                    y: ($(this).offset().top / height) * 100
+                 });
+            });
+
+            return elements;
+        }
+    </script>
+
+
+
+</body></html>  
