@@ -1,7 +1,71 @@
+$(function() {
     var width = 0;
     var height = 0;
 
+    var types = {
+        'a' : {
+            width: 100,
+            height: 100,
+            ratio: true,
+            color: '#f00',
+            caption: 'MHD'
+        },
+        'b' : {
+            width: 100,
+            height: 100,
+            ratio: true,
+            color: '#ff0',
+            caption: 'Hodiny'
+        },
+        'c' : {
+            width: 100,
+            height: 100,
+            ratio: false,
+            color: '#0ff',
+            caption: 'Správy'
+        },
+        'd' : {
+            width: 100,
+            height: 100,
+            ratio: false,
+            color: '#f0f',
+            caption: 'Nieco'
+        },
+        'e' : {
+            width: 100,
+            height: 100,
+            ratio: false,
+            color: '#00f',
+            caption: 'Daco'
+        }
+    };
+
+    var elements = [
+        {
+            type: 'a',
+            x: 10,
+            y: 10,
+            width: 100,
+            height: 100
+        },
+        {
+            type: 'c',
+            x: 50,
+            y: 10,
+            width: 100,
+            height: 100
+        },
+        {
+            type: 'e',
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100
+        }
+    ];
+
     $(document).on('click', '.btn-delete', function (e) {
+        console.log('ref');
         $(e.target).closest('.element').remove();
         store();
     });
@@ -10,7 +74,14 @@
         var type = $(e.target).closest('.btn').data('type');
         var x = 0;
         var y = 0;
-        createElement(type, x, y);
+
+        createElement({
+            type: type,
+            x: 0,
+            y: 0,
+            width: types[type].width,
+            height: types[type].height
+        });
         store();
     })
 
@@ -21,13 +92,13 @@
         $('#serialized').jsonViewer(elements);
 
         for (var i = 0; i < elements.length; i++) {
-            createElement(elements[i].type, elements[i].x, elements[i].y);
+            createElement(elements[i]);
         }
     }
 
-    function createElement(type, x, y) {
+    function createElement(element) {
         var $element = $(
-            '<div class="element element-' + type + '" data-type="' + type + '">' +
+            '<div class="element" data-type="' + element.type + '">' +
             '<button class="btn btn-link btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></button>' +
             '</div>'
         );
@@ -35,11 +106,16 @@
         $('#grid').append($element);
 
         $element.css({
-            top: x + '%',
-            left: y + '%'
+            position:'absolute',
+            width: element.width + 'px',
+            height: element.height + 'px',
+            background: types[element.type].color,
+            top: element.x + 'px',
+            left: element.y + 'px'
         });
 
         elementDraggable($element);
+        elementResizable($element, types[element.type].ratio);
     }
 
     function elementDraggable($element) {
@@ -58,6 +134,17 @@
         });
     }
 
+    function elementResizable($element, aspectRatio){
+
+        $element.resizable({
+            aspectRatio: aspectRatio,
+            stop: function (event, ui){
+                store();
+            }
+        });
+
+    }
+
     function store() {
         var elements = serialize();
 
@@ -73,12 +160,24 @@
             $(this);
             elements.push({
                 type: $(this).data('type'),
-                x: ($(this).offset().left / width) * 100,
-                y: ($(this).offset().top / height) * 100
+                x: $(this).offset().left,
+                y: $(this).offset().top,
+                width: $(this).outerWidth(),
+                height: $(this).outerHeight()
             });
         });
 
         return elements;
     }
 
+    function createToolbar(){
+        for (var type in types) {
+            $('#toolbar').append('<button class="btn" data-type="'+type+'" style="background:'+types[type].color+'">Add \''+type+'\'</button>');
+        }
+    }
 
+
+    elementsStart(elements);
+    createToolbar();
+
+});
