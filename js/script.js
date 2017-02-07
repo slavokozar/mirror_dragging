@@ -3,71 +3,112 @@ $(function() {
     var height = 0;
 
     var types = {
-        'a' : {
+        'autobusy' : {
             width: 100,
             height: 100,
             ratio: true,
+            resizeX: true,
+            resizeY: true,
             color: '#f00',
-            caption: 'MHD'
+            caption: 'Autobusy',
+            data: {
+                lines:[{
+                    from: "trojica",
+                    to:"veľká pošta"
+                }]
+            }
         },
-        'b' : {
+        'hodiny' : {
             width: 100,
             height: 100,
-            ratio: true,
+            ratio: false,
+            resizeX: true,
+            resizeY: true,
             color: '#ff0',
-            caption: 'Hodiny'
+            caption: 'Hodiny',
+            data: {}
         },
-        'c' : {
+        'spravy' : {
             width: 100,
             height: 100,
             ratio: false,
+            resizeX: false,
+            resizeY: true,
             color: '#0ff',
-            caption: 'Správy'
+            caption: 'Správy',
+            data: {
+                source: 1
+            }
         },
-        'd' : {
+        'gmail' : {
             width: 100,
             height: 100,
             ratio: false,
+            resizeX: true,
+            resizeY: false,
             color: '#f0f',
-            caption: 'Nieco'
+            caption: 'Gmail',
+            data: {
+                email: '',
+                password: ''
+            }
         },
-        'e' : {
+        'pocasie' : {
             width: 100,
             height: 100,
             ratio: false,
+            resizeX: true,
+            resizeY: true,
             color: '#00f',
-            caption: 'Daco'
+            caption: 'Počasie',
+            data: {
+                lat: 48.9958127,
+                lon: 21.1760141
+            }
         }
     };
 
-    var elements = [
-        {
-            type: 'a',
-            x: 10,
-            y: 10,
-            width: 100,
-            height: 100
-        },
-        {
-            type: 'c',
-            x: 50,
-            y: 10,
-            width: 100,
-            height: 100
-        },
-        {
-            type: 'e',
-            x: 50,
-            y: 50,
-            width: 100,
-            height: 100
-        }
-    ];
-
     $(document).on('click', '.btn-delete', function (e) {
-        console.log('ref');
-        $(e.target).closest('.element').remove();
-        store();
+        $element = $(e.target).closest('.element');
+        var id = $element.data('id');
+
+        $.ajax({
+            url: 'delete.php?id='+id,
+            method: 'GET',
+        }).done(function (data){
+            $('.modal').modal('hide');
+            if(data == 1){
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-success"><strong>Success!</strong> Element removed.</div></div>');
+            }else{
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-danger"><strong>Error!</strong> Element not removed.</div></div>');
+            }
+
+            $('#btn-save').closest('.row').append($alert);
+            setTimeout(function(){ $alert.remove() }, 2000);
+
+            $element.remove();
+            store();
+        });
+    });
+
+    $(document).on('click', '.btn-edit', function (e) {
+        var id = $(e.target).closest('.element').data('id');
+        $.ajax({
+            url: 'edit.php',
+            method: 'get',
+            data: {
+                'id': id
+            }
+        }).done(function (data){
+            var $modal = $(data);
+            $('body').append($modal);
+            $modal.modal('show');
+
+            $modal.on('hidden.bs.modal', function (e) {
+                $modal.remove();
+                $('.modal-backdrop').remove();
+            });
+        });
     });
 
     $(document).on('click', '#toolbar .btn', function (e) {
@@ -75,31 +116,147 @@ $(function() {
         var x = 0;
         var y = 0;
 
+        var id = Date.now() + '';
+        for(var i = 0; i < 4; i++){
+            id = id + Math.floor(Math.random() * 10);
+        }
+
+
         createElement({
+            id: id,
             type: type,
             x: 0,
             y: 0,
             width: types[type].width,
-            height: types[type].height
+            height: types[type].height,
         });
+
+        saveElement(id, types[type].data);
         store();
-    })
+        save();
+    });
 
-    function elementsStart(elements){
-        width = $('#grid').width();
-        height = $('#grid').height();
+    $(document).on('click', '#btn-save', function (e) {
+        save();
+    });
 
-        $('#serialized').jsonViewer(elements);
+    function save(){
+        $.ajax({
+            url: 'save.php',
+            method: 'post',
+            data: {
+                'data': JSON.stringify(serialize())
+            }
+        }).done(function (data){
+            if(data == 1){
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-success"><strong>Success!</strong> Elements saved.</div></div>');
+            }else{
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-danger"><strong>Error!</strong> Elements not saved.</div></div>');
+            }
 
-        for (var i = 0; i < elements.length; i++) {
-            createElement(elements[i]);
+            $('#btn-save').closest('.row').append($alert);
+            setTimeout(function(){ $alert.remove() }, 2000);
+        })
+    }
+
+
+    $(document).on('click', '#modal-submit', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var data = serializeModal();
+        var id = $('.modal form').attr('action');
+        saveElement(id, data);
+    });
+
+    $(document).on('click', '#modal-addLine', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $wrapper = $('.modal form .form-wrapper').last();
+        $wrapper.after($wrapper.clone());
+    });
+
+    $(document).on('click', '.modal-removeLine', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        $(e.target).closest('.form-wrapper').remove();
+    });
+
+
+    function serializeModal(){
+        var data = {};
+
+        var $form = $('.modal form');
+        var $wrappers = $form.find('.form-wrapper');
+
+        if($wrappers.length == 0){
+            var array = $form.serializeArray();
+
+            for(var i in array){
+                data[array[i].name] = array[i].value;
+            }
+        }else{
+            var lines = []
+            $wrappers.each(function(){
+                var line = {};
+
+                $(this).find('input').each(function(){
+                    line[$(this).attr('name')] = $(this).val();
+                });
+
+                lines.push(line);
+            });
+
+            data['lines'] = lines;
         }
+        return data;
+    }
+
+    function saveElement(id, data){
+        $.ajax({
+            url: 'update.php?id='+id,
+            method: 'POST',
+            data: {
+                data: JSON.stringify(data)
+            }
+        }).done(function (data){
+            $('.modal').modal('hide');
+            if(data == 1){
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-success"><strong>Success!</strong> Elements modified.</div></div>');
+            }else{
+                var $alert = $('<div class="col-lg-12"><div class="alert alert-danger"><strong>Error!</strong> Elements not modified.</div></div>');
+            }
+
+            $('#btn-save').closest('.row').append($alert);
+            setTimeout(function(){ $alert.remove() }, 2000);
+        })
+    }
+
+    function elementsInit(elements){
+        $.ajax({
+            url: 'load.php',
+        }).done(function(data){
+            width = $('#grid').width();
+            height = $('#grid').height();
+
+            if(data != ""){
+                $('#serialized').jsonViewer(elements);
+                elements = JSON.parse(data);
+                for (var i = 0; i < elements.length; i++) {
+                    createElement(elements[i]);
+                }
+            }
+        });
     }
 
     function createElement(element) {
+
         var $element = $(
-            '<div class="element" data-type="' + element.type + '">' +
+            '<div class="element" data-id="' + element.id + '" data-type="' + element.type + '">' +
             '<button class="btn btn-link btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></button>' +
+            '<button class="btn btn-link btn-edit"><i class="fa fa-pencil" aria-hidden="true"></i></button>' +
             '</div>'
         );
 
@@ -110,12 +267,15 @@ $(function() {
             width: element.width + 'px',
             height: element.height + 'px',
             background: types[element.type].color,
-            top: element.x + 'px',
-            left: element.y + 'px'
+            top: element.y + 'px',
+            left: element.x + 'px'
         });
 
+
+
+
         elementDraggable($element);
-        elementResizable($element, types[element.type].ratio);
+        elementResizable($element, types[element.type]);
     }
 
     function elementDraggable($element) {
@@ -134,34 +294,37 @@ $(function() {
         });
     }
 
-    function elementResizable($element, aspectRatio){
+    function elementResizable($element, type){
+        var width = $element.outerWidth();
+        var height = $element.outerHeight();
 
         $element.resizable({
-            aspectRatio: aspectRatio,
+            aspectRatio: type.ratio,
+            minHeight: (type.resizeY ? null : height),
+            maxHeight: (type.resizeY ? null : height),
+            minWidth: (type.resizeX ? null : width),
+            maxWidth: (type.resizeX ? null : width),
             stop: function (event, ui){
                 store();
             }
         });
-
     }
 
     function store() {
         var elements = serialize();
 
-
         $('#serialized').jsonViewer(elements);
-
-
     }
 
     function serialize() {
         var elements = [];
         $('#grid .element').each(function () {
-            $(this);
+
             elements.push({
+                id: $(this).data('id'),
                 type: $(this).data('type'),
-                x: $(this).offset().left,
-                y: $(this).offset().top,
+                x: $(this).position().left,
+                y: $(this).position().top,
                 width: $(this).outerWidth(),
                 height: $(this).outerHeight()
             });
@@ -172,12 +335,12 @@ $(function() {
 
     function createToolbar(){
         for (var type in types) {
-            $('#toolbar').append('<button class="btn" data-type="'+type+'" style="background:'+types[type].color+'">Add \''+type+'\'</button>');
+            $('#toolbar').append('<button class="btn" data-type="'+type+'" style="background:'+types[type].color+'">Add \''+types[type].caption+'\'</button>');
         }
     }
 
 
-    elementsStart(elements);
+    elementsInit();
     createToolbar();
 
 });

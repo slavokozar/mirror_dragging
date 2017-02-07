@@ -8,7 +8,7 @@ body{
     border:2px solid black;
 }
 
-.btn-delete{
+.btn-link{
     color: #fff;
 }
 
@@ -24,4 +24,8 @@ body{
 #toolbar .btn{
     margin: 0 3px;
     border-radius: 0px;
+}
+
+.modal-removeLine{
+    margin-top: 26px;
 }
