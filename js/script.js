@@ -252,7 +252,7 @@ $(function() {
     }
 
     function createElement(element) {
-
+        console.log(width, height);
         var $element = $(
             '<div class="element" data-id="' + element.id + '" data-type="' + element.type + '">' +
             '<button class="btn btn-link btn-delete"><i class="fa fa-trash-o" aria-hidden="true"></i></button>' +
@@ -264,11 +264,11 @@ $(function() {
 
         $element.css({
             position:'absolute',
-            width: element.width + 'px',
-            height: element.height + 'px',
+            width: ((element.width / 100) * width) + 'px',
+            height: ((element.height / 100) * height) + 'px',
             background: types[element.type].color,
-            top: element.y + 'px',
-            left: element.x + 'px'
+            left: ((element.x / 100) * width) + 'px',
+            top: ((element.y / 100) * height) + 'px'
         });
 
 
@@ -284,8 +284,11 @@ $(function() {
                 store();
             },
             drag: function (event, ui) {
-                var top = Math.min(Math.max(0, ui.position.top), (height - $(event.target).height()));
-                var left = Math.min(Math.max(0, ui.position.left), (width - $(event.target).width()));
+                //console.log(ui.position.top,(height - $(event.target).outerHeight()));
+                //console.log(ui.position.left,(width - $(event.target).outerWidth()));
+
+                var top = Math.min(Math.max(0, ui.position.top), (height - $(event.target).outerHeight()));
+                var left = Math.min(Math.max(0, ui.position.left), (width - $(event.target).outerWidth()));
 
 
                 ui.position.top = top;
@@ -295,25 +298,31 @@ $(function() {
     }
 
     function elementResizable($element, type){
-        var width = $element.outerWidth();
-        var height = $element.outerHeight();
+        var elWidth = $element.outerWidth();
+        var elHeight = $element.outerHeight();
 
         $element.resizable({
             aspectRatio: type.ratio,
-            minHeight: (type.resizeY ? null : height),
-            maxHeight: (type.resizeY ? null : height),
-            minWidth: (type.resizeX ? null : width),
-            maxWidth: (type.resizeX ? null : width),
+            minHeight: (type.resizeY ? null : elHeight),
+            maxHeight: (type.resizeY ? null : elHeight),
+            minWidth: (type.resizeX ? null : elWidth),
+            maxWidth: (type.resizeX ? null : elWidth),
+            resize: function (event, ui){
+                ui.size.height = Math.min(ui.size.height, (height - ui.position.top));
+                ui.size.width = Math.min(ui.size.width, (width - ui.position.left));
+
+            },
             stop: function (event, ui){
                 store();
             }
+
         });
     }
 
     function store() {
-        var elements = serialize();
+        //var elements = serialize();
 
-        $('#serialized').jsonViewer(elements);
+        //$('#serialized').jsonViewer(elements);
     }
 
     function serialize() {
@@ -323,10 +332,10 @@ $(function() {
             elements.push({
                 id: $(this).data('id'),
                 type: $(this).data('type'),
-                x: $(this).position().left,
-                y: $(this).position().top,
-                width: $(this).outerWidth(),
-                height: $(this).outerHeight()
+                x: ($(this).position().left / width) * 100,
+                y: ($(this).position().top / height) * 100,
+                width: ($(this).outerWidth() / width) * 100,
+                height: ($(this).outerHeight() / height) * 100
             });
         });
 
