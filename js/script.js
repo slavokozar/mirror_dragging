@@ -4,8 +4,8 @@ $(function() {
 
     var types = {
         'autobusy' : {
-            width: 100,
-            height: 100,
+            width: 10,
+            height: 10,
             ratio: true,
             resizeX: true,
             resizeY: true,
@@ -19,8 +19,8 @@ $(function() {
             }
         },
         'hodiny' : {
-            width: 100,
-            height: 100,
+            width: 10,
+            height: 10,
             ratio: false,
             resizeX: true,
             resizeY: true,
@@ -30,7 +30,7 @@ $(function() {
         },
         'spravy' : {
             width: 100,
-            height: 100,
+            height: 10,
             ratio: false,
             resizeX: false,
             resizeY: true,
@@ -42,7 +42,7 @@ $(function() {
         },
         'gmail' : {
             width: 100,
-            height: 100,
+            height: 10,
             ratio: false,
             resizeX: true,
             resizeY: false,
@@ -55,7 +55,7 @@ $(function() {
         },
         'pocasie' : {
             width: 100,
-            height: 100,
+            height: 10,
             ratio: false,
             resizeX: true,
             resizeY: true,
